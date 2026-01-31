@@ -1,0 +1,105 @@
+definitions:
+  domain.SignInRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  domain.SignInResponse:
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+    type: object
+  domain.SignUpRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: Auth Service API
+  version: "1.0"
+paths:
+  /check:
+    get:
+      consumes:
+      - application/json
+      description: Validate access token from Authorization header
+      parameters:
+      - description: Authorization header with access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Access token is valid
+        "401":
+          description: Unauthorized
+        "405":
+          description: Method not allowed
+        "500":
+          description: Internal server error
+      summary: Check access token
+  /signin:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate and return access/refresh tokens
+      parameters:
+      - description: Sign in payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SignInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tokens issued
+          schema:
+            $ref: '#/definitions/domain.SignInResponse'
+        "400":
+          description: Invalid request
+        "405":
+          description: Method not allowed
+        "500":
+          description: Internal server error
+      summary: Sign in
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Create credentials and user profile
+      parameters:
+      - description: Sign up payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created
+        "400":
+          description: Invalid request
+        "405":
+          description: Method not allowed
+        "409":
+          description: Conflict
+        "500":
+          description: Internal server error
+      summary: Sign up
+swagger: "2.0"
