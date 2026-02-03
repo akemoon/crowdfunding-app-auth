@@ -72,14 +72,15 @@ func (s *Service) SignIn(ctx context.Context, req domain.SignInRequest) (domain.
 	}, nil
 }
 
-// func (s *Service) Logout(ctx context.Context, refreshToken string) error {
-// 	if refreshToken == "" {
-// 		return domain.ErrInvalidCreds
-// 	}
+func (s *Service) SignOut(ctx context.Context, refreshToken string) error {
+	if refreshToken == "" {
+		return domain.ErrInvlaidRefreshToken
+	}
 
-// 	if err := s.tokenSvc.DeleteUserTokens(ctx, refreshToken); err != nil {
-// 		return err
-// 	}
+	err := s.tokenSvc.DeleteRefreshToken(ctx, refreshToken)
+	if err != nil {
+		return fmt.Errorf("token service: %w", err)
+	}
 
-// 	return nil
-// }
+	return nil
+}

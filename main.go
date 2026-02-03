@@ -16,12 +16,14 @@ import (
 	"github.com/akemoon/crowdfunding-app-auth/config"
 	_ "github.com/akemoon/crowdfunding-app-auth/docs"
 	infraRedis "github.com/akemoon/crowdfunding-app-auth/infra/redis"
+	"github.com/akemoon/crowdfunding-app-auth/metrics"
 	"github.com/akemoon/crowdfunding-app-auth/repo/creds/postgres"
 	redisRepo "github.com/akemoon/crowdfunding-app-auth/repo/token/redis"
 	authService "github.com/akemoon/crowdfunding-app-auth/service/auth"
 	"github.com/akemoon/crowdfunding-app-auth/service/creds"
 	"github.com/akemoon/crowdfunding-app-auth/service/token"
 	"github.com/akemoon/crowdfunding-app-auth/tool/hasher/bcrypt"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -83,8 +85,12 @@ func main() {
 	userSvc := userClient.NewClient(userServiceURL)
 	authSvc := authService.NewService(userSvc, credsSvc, tokenSvc)
 
+	reg := prometheus.DefaultRegisterer
+
+	m := metrics.NewAuthMetrics(reg)
+
 	srv := api.NewServer()
-	srv.AddAuthHandlers(authSvc)
+	srv.AddAuthHandlers(authSvc, m)
 	srv.AddTokenHandlers(tokenSvc)
 	srv.AddSwaggerUI()
 	srv.AddMetrics()

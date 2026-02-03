@@ -9,6 +9,7 @@ import (
 	"github.com/akemoon/crowdfunding-app-auth/domain"
 	"github.com/akemoon/crowdfunding-app-auth/repo/token"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 const (
@@ -52,7 +53,7 @@ func (s *Service) GenRefreshToken(ctx context.Context, tc domain.TokenClaims) (s
 	if err != nil {
 		return "", fmt.Errorf("%w: %s", domain.ErrInternal, err)
 	}
-
+	// TODO: user id : token or just token
 	err = s.refreshTokenRepo.Set(ctx, signedToken)
 	if err != nil {
 		return "", fmt.Errorf("token repo: %w", err)
@@ -88,24 +89,20 @@ func (s *Service) GenRefreshToken(ctx context.Context, tc domain.TokenClaims) (s
 //
 //	return at, rt, nil
 //}
-//
-//func (s *Service) DeleteRefreshToken(ctx context.Context, refreshToken string) error {
-//	return s.tokenRepo.Delete(ctx, refreshToken)
-//}
-//
-//func (s *Service) DeleteUserTokens(ctx context.Context, refreshToken string) error {
-//	userID, err := s.userIDFromRefreshToken(refreshToken)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return s.tokenRepo.DeleteByUserID(ctx, userID)
-//}
 
-func (s *Service) ValidateAccessToken(token string) error {
+func (s *Service) DeleteRefreshToken(ctx context.Context, refreshToken string) error {
+	err := s.refreshTokenRepo.Delete(ctx, refreshToken)
+	if err != nil {
+		return fmt.Errorf("token repo: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) ValidateAccessToken(token string) (uuid.UUID, error) {
 	parts := strings.Fields(token)
 	if len(parts) != 2 || parts[0] != "Bearer" {
-		return domain.ErrInvalidAccessToken
+		return uuid.Nil, domain.ErrInvalidAccessToken
 	}
 
 	parser := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
@@ -117,11 +114,26 @@ func (s *Service) ValidateAccessToken(token string) error {
 		return []byte(s.secret), nil
 	})
 	if err != nil {
-		return fmt.Errorf("%w: %s", domain.ErrInternal, err)
+		return uuid.Nil, fmt.Errorf("parse token: %w", err)
 	}
 	if !jwtToken.Valid {
-		return domain.ErrInvalidAccessToken
+		return uuid.Nil, domain.ErrInvalidAccessToken
 	}
 
-	return nil
+	claims, ok := jwtToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return uuid.Nil, domain.ErrInvalidAccessToken
+	}
+
+	userIDStr, ok := claims["userID"].(string)
+	if !ok || userIDStr == "" {
+		return uuid.Nil, domain.ErrInvalidAccessToken
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return uuid.Nil, domain.ErrInvalidAccessToken
+	}
+
+	return userID, nil
 }

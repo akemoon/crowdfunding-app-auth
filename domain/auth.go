@@ -15,3 +15,7 @@ type SignInResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
+
+type SignOutRequest struct {
+	RefreshToken string `json:"refreshToken"`
+}

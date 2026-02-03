@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/akemoon/crowdfunding-app-auth/api/handler"
+	"github.com/akemoon/crowdfunding-app-auth/metrics"
 	"github.com/akemoon/crowdfunding-app-auth/service/auth"
 	"github.com/akemoon/crowdfunding-app-auth/service/token"
 	"github.com/akemoon/golib/myhttp/middleware"
@@ -23,9 +24,10 @@ func NewServer() *Server {
 	}
 }
 
-func (s *Server) AddAuthHandlers(svc *auth.Service) {
+func (s *Server) AddAuthHandlers(svc *auth.Service, m *metrics.AuthMetrics) {
 	s.r.HandleFunc("POST /signup", handler.SignUp(svc))
-	s.r.HandleFunc("POST /signin", handler.SignIn(svc))
+	s.r.HandleFunc("POST /signin", handler.SignIn(svc, m))
+	s.r.HandleFunc("POST /signout", handler.SignOut(svc))
 }
 
 func (s *Server) AddTokenHandlers(svc *token.Service) {

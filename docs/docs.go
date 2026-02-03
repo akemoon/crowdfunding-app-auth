@@ -36,7 +36,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Access token is valid"
+                        "description": "Access token is valid",
+                        "headers": {
+                            "X-User-Id": {
+                                "type": "string",
+                                "description": "Authenticated user UUID"
+                            }
+                        }
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -77,6 +83,43 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/domain.SignInResponse"
                         }
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    },
+                    "405": {
+                        "description": "Method not allowed"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/signout": {
+            "post": {
+                "description": "Revoke refresh token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Sign out",
+                "parameters": [
+                    {
+                        "description": "Sign out payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SignOutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signed out"
                     },
                     "400": {
                         "description": "Invalid request"
@@ -149,6 +192,14 @@ const docTemplate = `{
                 "accessToken": {
                     "type": "string"
                 },
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.SignOutRequest": {
+            "type": "object",
+            "properties": {
                 "refreshToken": {
                     "type": "string"
                 }
